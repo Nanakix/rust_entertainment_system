@@ -1,3 +1,6 @@
 [submodule "nes-test-roms"]
 	path = nes-test-roms
 	url = https://github.com/christopherpow/nes-test-roms.git
+[submodule "chip-8/res/chip8-roms"]
+	path = chip-8/res/chip8-roms
+	url = https://github.com/kripod/chip8-roms
