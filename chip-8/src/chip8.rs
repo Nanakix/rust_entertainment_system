@@ -1,5 +1,5 @@
-use std::array;
-
+use std::time::Duration;
+use std::thread;
 pub static REFRESH_RATE: f32  = 1.0/60.0;
 
 static CHIP8_FONTSET: [u8;80] = [
@@ -59,9 +59,20 @@ impl Chip8 {
 
     pub fn emulate_cycle(&mut self) {
         // Fetch Opcode
-
+        // dbg!(&self.memory[512]);
+        self.opcode = (self.memory[self.pc as usize] as u16) << 8 | self.memory[(self.pc + 1) as usize] as u16;
+        self.pc += 2;
         // Decode Opcode
+        
+        println!("{}", format!("{:#06x}", self.opcode));
+        
         // Execute Opcode
+
+
         // Update timers
+
+        thread::sleep(Duration::from_secs_f32(REFRESH_RATE));
+        // self.delay_timer -=1;
+        // self.sound_timer -=1;
     }
 }

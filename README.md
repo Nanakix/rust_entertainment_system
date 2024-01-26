@@ -7,8 +7,8 @@ I'm beginning with this project, as I'm a newcomer in the emulation :
 
 ### TODO-list:
 - [X] Create a TODO-list
-- [ ] Open a Test ROM
-- [ ] Fetch ROM's content
+- [X] Open a Test ROM
+- [X] Fetch ROM's content
 - [ ] Implement an opcode
 - [ ] Cycle to it
 - [ ] Integrate Graphics rendering (probably SDL2)
