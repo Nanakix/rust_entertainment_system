@@ -9,11 +9,12 @@ I'm beginning with this project, as I'm a newcomer in the emulation :
 - [X] Create a TODO-list
 - [X] Open a Test ROM
 - [X] Fetch ROM's content
-- [ ] Implement an opcode
-- [ ] Cycle to it
+- [X] Implement an opcode
+- [ ] Implement all necessary opcodes 
 - [ ] Integrate Graphics rendering (probably SDL2)
+- [ ] Handle user input
 - [ ] Render
-- [ ] Tests
+- [ ] Automatic Tests
 ### Resources used
 - Chip 8 roms from https://github.com/kripod/chip8-roms
 - Glances at https://github.com/peterapps/chip8 
