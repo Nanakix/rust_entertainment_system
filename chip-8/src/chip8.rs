@@ -174,29 +174,39 @@ impl Chip8 {
                 // Adds NN to VX (carry flag is not changed).
             },
             0x8000 => { // inter registry operations: 0x8XYN
-                match self.opcode & 0x000F {
-                    0x0000 => { 
+                let [vx, vy] = shift_idiomatic_split_u16(self.opcode);
+                let vx = vx & 0x0F;
+                let vy = vy & 0xF0; 
+                match self.opcode & 0xF00F {
+                    
+                    0x8000 => { 
                         // Sets VX to the value of VY
-
+                        self.v[vx as usize] = self.v[vy as usize];
+                        self.pc+=2;
                     },
-                    0x0001 => {},
-                    0x0002 => {},
-                    0x0003 => {},
-                    0x0004 => {  
+                    0x8001 => {
+                        // Sets VX to VX OR VY. 
+                        self.v[vx as usize] = self.v[vx as usize] | self.v[vy as usize];
+                    },
+                    0x8002 => {
+                        // Sets VX to VX AND VY.
+                        self.v[vx as usize] = self.v[vx as usize] & self.v[vy as usize];
+                    },
+                    0x8003 => {
+                        // Sets VX to VX xor VY
+                        self.v[vx as usize] = self.v[vx as usize] ^ self.v[vy as usize];
+                    },
+                    0x8004 => {  
                         // Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not.
-                        let [vx, vy] = shift_idiomatic_split_u16(self.opcode);
-                        let vx = vx & 0x0F;
-                        let vy = vy & 0xF0; 
                         let (vz, carry) = vx.overflowing_add(vy);
                         self.v[vx as usize] = vz;
                         self.v[15] = carry as u8;
                         self.pc+=2;
-
                     },
-                    0x0005 => {},
-                    0x0006 => {},
-                    0x0007 => {},
-                    0x000E => {},
+                    0x8005 => {},
+                    0x8006 => {},
+                    0x8007 => {},
+                    0x800E => {},
                     _ => eprintln!("Unknown opcode:{:#06x}", self.opcode),
                 };
             },
@@ -214,6 +224,104 @@ impl Chip8 {
             },
             0xA000 => { // set I to the address NNN
                 self.i = self.opcode & 0x0FFF;
+                self.pc +=2;
+            },
+            0xB000 => { // BNNN
+                // Jumps to the address NNN + V0
+                let [high, low] = shift_idiomatic_split_u16(self.opcode);
+                let high = high & 0x0F;
+                let jump = (high as u16) << 8 | low as u16;
+
+                self.pc += self.v[0] as u16 + jump; // need testing, not sure lol
+            },
+            0xC000 => { // CXNN
+                // Sets VX to the result of a bitwise and operation on a random number (Typically: 0 to 255) and NN.
+                let [vx, nn] = shift_idiomatic_split_u16(self.opcode);
+                self.v[vx as usize] = self.v[vx as usize] & nn;
+                self.pc +=2;
+            },
+            0xD000 => { // DXYN
+                // Draws a sprite at coordinate (VX, VY)
+                self.pc +=2;
+            },
+            0xE000 => { // Key opcodes
+                match self.opcode & 0xF0FF {
+                    0xE09E => { // Skips the next instruction if the key stored in VX is pressed
+                        // let [high, low] = shift_idiomatic_split_u16(self.opcode);
+                        // let high = high & 0x0F;
+                        println!("awaiting key handling");
+                        // self.pc += 2;
+                    },
+                    0xE0A1 => { // Skips the next instruction if the key stored in VX is not pressed 
+                        // let [high, low] = shift_idiomatic_split_u16(self.opcode);
+                        // let high = high & 0x0F;
+                        println!("awaiting key handling");
+                        // self.pc += 2;
+                    },
+                    _ => {
+                        println!("Unknown opcode: {:#06x}", self.opcode);
+                    }
+                }
+                // Draws a sprite at coordinate (VX, VY)
+                self.pc +=2;
+            },
+            0xF000 => { // FXNN
+                let [reg, nn] = shift_idiomatic_split_u16(self.opcode);
+                let reg = reg & 0x0F;
+                match self.opcode & 0xF0FF {
+                    0xF007 => {
+                        // Sets VX to the value of the delay timer
+                        self.v[reg as usize] = self.delay_timer;
+                        self.pc += 2;
+                    },
+                    0xF00A => {
+                        // A key press is awaited, and then stored in VX (blocking operation, all instruction halted until next key event)
+                        self.v[reg as usize] = 0;
+                        self.pc += 2;
+                    },
+                    0xF015 => {
+                        // Sets the delay timer to VX
+                        self.delay_timer = self.v[reg as usize];
+                        self.pc += 2;
+                    },
+                    0xF018 => {
+                        // Sets the sound timer to VX
+                        self.sound_timer = self.v[reg as usize];
+                        self.pc += 2;
+                    },
+                    0xF01E => {
+                        // Adds VX to I. VF is not affected
+                        self.v[reg as usize] = 0;
+                        self.pc += 2;
+                    },
+                    0xF029 => {
+                        // Sets I to the location of the sprite for the character in VX. 
+                        // Characters 0-F (in hexadecimal) are represented by a 4x5 font.
+                        self.v[reg as usize] = 0;
+                        self.pc += 2;
+                    },
+                    0xF033 => {
+                        // Stores the binary-coded decimal representation of VX,
+                        // with the hundreds digit in memory at location in I, 
+                        // the tens digit at location I+1,
+                        // and the ones digit at location I+2
+                        self.v[reg as usize] = 0;
+                        self.pc += 2;
+                    },
+                    0xF055 => {
+                        // Stores from V0 to VX (including VX) in memory, starting at address I.
+                        // The offset from I is increased by 1 for each value written, but I itself is left unmodified
+                        self.v[reg as usize] = 0;
+                        self.pc += 2;
+                    },
+                    0xF065 => {
+                        // Fills from V0 to VX (including VX) with values from memory, starting at address I. 
+                        // The offset from I is increased by 1 for each value read, but I itself is left unmodified
+                        self.v[reg as usize] = 0;
+                        self.pc += 2;
+                    },
+                    _ => println!("Unknown opcode: {:#06x}", self.opcode)
+                }
                 self.pc +=2;
             },
             _ => eprintln!("Unknown opcode: {:#06x}", self.opcode),
