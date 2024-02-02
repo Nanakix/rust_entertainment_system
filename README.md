@@ -18,7 +18,7 @@ I'm beginning with this project, as I'm a newcomer in the emulation :
 ### Resources used
 - Chip 8 roms from https://github.com/kripod/chip8-roms
 - Glances at https://github.com/peterapps/chip8 
-
+- Glium tutorial https://glium.github.io/glium/book/tuto-01-getting-started.html
 
 ## NES
 

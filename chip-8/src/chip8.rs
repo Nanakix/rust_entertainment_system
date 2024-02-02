@@ -245,16 +245,14 @@ impl Chip8 {
                 self.pc +=2;
             },
             0xE000 => { // Key opcodes
+                let [high, low] = shift_idiomatic_split_u16(self.opcode);
+                let high = high & 0x0F;
                 match self.opcode & 0xF0FF {
                     0xE09E => { // Skips the next instruction if the key stored in VX is pressed
-                        // let [high, low] = shift_idiomatic_split_u16(self.opcode);
-                        // let high = high & 0x0F;
                         println!("awaiting key handling");
                         // self.pc += 2;
                     },
                     0xE0A1 => { // Skips the next instruction if the key stored in VX is not pressed 
-                        // let [high, low] = shift_idiomatic_split_u16(self.opcode);
-                        // let high = high & 0x0F;
                         println!("awaiting key handling");
                         // self.pc += 2;
                     },
