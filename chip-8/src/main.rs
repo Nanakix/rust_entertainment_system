@@ -3,20 +3,11 @@ use std::fs::File;
 use std::io::Read;
 use std::path::PathBuf;
 
-use sdl2::event::Event;
-use sdl2::keyboard::Keycode;
-use sdl2::pixels::Color;
 use std::time::Duration;
 
+extern crate glium;
+extern crate winit;
 
-fn find_sdl_gl_driver() -> Option<u32> {
-    for (index, item) in sdl2::render::drivers().enumerate() {
-        if item.name == "opengl" {
-            return Some(index as u32);
-        }
-    }
-    None
-}
 
 fn main() -> Result<(), String> {
     // init CPU
@@ -36,43 +27,27 @@ fn main() -> Result<(), String> {
     }
         let mut cpt = 0;
 
-
-    let sdl_context = sdl2::init()?;
-    let video_subsystem = sdl_context.video()?;
-
-    let window = video_subsystem
-        .window("rust-sdl2 demo: Video", 800, 600)
-        .position_centered()
-        .opengl()
-        .build()
-        .map_err(|e| e.to_string())?;
-
-    let mut canvas = window.into_canvas().build().map_err(|e| e.to_string())?;
-
-    canvas.set_draw_color(Color::RGB(0, 0, 0));
-    canvas.clear();
-    canvas.present();
-    let mut event_pump = sdl_context.event_pump()?;
-
-        'running: loop {
-            chip_8.emulate_cycle();
-            for event in event_pump.poll_iter() {
-                match event {
-                    Event::Quit { .. }
-                    | Event::KeyDown {
-                        keycode: Some(Keycode::Escape),
-                        ..
-                    } => break 'running,
-                    _ => {}
-                }
-            }
+    // 1. The **winit::EventLoop** for handling events.
+    let event_loop = winit::event_loop::EventLoopBuilder::new().build().unwrap();
+    // 2. Create a glutin context and glium Display
+    let (window, display) = glium::backend::glutin::SimpleWindowBuilder::new().build(&event_loop);
+    let _ = event_loop.run(move |event, window_target| {
+        match event {
+            winit::event::Event::WindowEvent { event, .. } => match event {
+            winit::event::WindowEvent::CloseRequested => window_target.exit(),
+            _ => (),
+            },
+            _ => (),
+        };
+    });
     
-            canvas.clear();
-            canvas.present();
-            ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 30));
-            // The rest of the game loop goes here...
-        }
 
+    // 'running: loop {
+    //         chip_8.emulate_cycle();
+    //         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 30));
+    // }
+        
+        // The rest of the game loop goes here...
 
   // Emulate one cycle
 //   myChip8.emulateCycle();
