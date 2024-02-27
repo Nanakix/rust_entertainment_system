@@ -87,14 +87,12 @@ impl Chip8 {
             println!("{}", format!("{:#06x}", self.opcode));
             self.decode_opcode();
             
-            // Execute Opcode
-
             // Update timers
             self.update_timers();
         }
     
         let elapsed = now.elapsed();
-        println!("Elapsed: {:.2?}", elapsed);
+        // println!("Elapsed: {:.2?}", elapsed);
 
         thread::sleep(Duration::from_secs_f32(REFRESH_RATE) - elapsed); //TODO: Handle case where elapsed > REFRESH_RATE
         
@@ -155,22 +153,18 @@ impl Chip8 {
                 let [reg, nn] = shift_idiomatic_split_u16(self.opcode);
                 let reg = reg & 0x0F; 
                 if self.v[reg as usize] == nn {
-                    self.pc += 4;
-                }
-                else {
                     self.pc += 2;
                 }
+                self.pc += 2;
             },
             0x4000 => {
                 // Skips the next instruction if VX does not equal NN (usually the next instruction is a jump to skip a code block).
                 let [reg, nn] = shift_idiomatic_split_u16(self.opcode);
                 let reg = reg & 0x0F; 
                 if self.v[reg as usize] != nn {
-                    self.pc += 4;
-                }
-                else {
                     self.pc += 2;
                 }
+                self.pc += 2;
             },
             0x5000 => {
                 // Skips the next instruction if VX equals VY (usually the next instruction is a jump to skip a code block).
@@ -178,11 +172,9 @@ impl Chip8 {
                 let vx = vx & 0x0F; 
                 let vy = vy & 0xF0;
                 if self.v[vx as usize] == self.v[vy as usize] {
-                    self.pc += 4;
-                }
-                else {
                     self.pc += 2;
                 }
+                self.pc += 2;
             },
             0x6000 => { //6XNN
                 // Sets VX to NN.
@@ -262,7 +254,23 @@ impl Chip8 {
                 self.pc +=2;
             },
             0xD000 => { // DXYN
-                // Draws a sprite at coordinate (VX, VY)
+                // Draws a sprite at coordinate (VX, VY) of width 8 bits and height N
+                let x = self.v[self.opcode &0x0F00 >> 8 as usize];
+                let y = self.v[self.opcode &0x00F0 >> 4 as usize];
+                let height = self.opcode & 0x000F;
+
+
+                self.v[0xF] = 0;
+
+                for h in 0..height - 1 {
+                    let pixel = self.memory[self.i + h];
+                    for xline in 0..7 {
+                        if pixel & (0x80 >> xline) {
+
+                        }
+                    }
+                }
+
                 self.pc +=2;
             },
             0xE000 => { // Key opcodes
