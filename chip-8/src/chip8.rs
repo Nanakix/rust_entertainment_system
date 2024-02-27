@@ -1,3 +1,4 @@
+use std::ops::Shr;
 use std::thread;
 use std::time::Duration;
 use std::time::Instant;
@@ -211,15 +212,35 @@ impl Chip8 {
                     },
                     0x8004 => {  
                         // Adds VY to VX. VF is set to 1 when there's an overflow, and to 0 when there is not.
-                        let (vz, carry) = vx.overflowing_add(vy);
-                        self.v[vx as usize] = vz;
-                        self.v[15] = carry as u8;
+                        let vz  = self.v[vx as usize] as u16 + self.v[vy as usize] as u16;
+                        self.v[vx as usize] = vz as u8;
+                        self.v[0xF] = (vz < 255) as u8;
                         self.pc+=2;
                     },
-                    0x8005 => {},
-                    0x8006 => {},
-                    0x8007 => {},
-                    0x800E => {},
+                    0x8005 => {
+                        //VY is subtracted from VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VX >= VY and 0 if not)
+                        self.v[vx as usize] = self.v[vx as usize].wrapping_sub(self.v[vy as usize]);
+                        self.v[0xF] = (self.v[vy as usize] < self.v[vx as usize]) as u8;
+                        self.pc += 2;
+                    },
+                    0x8006 => {
+                        // Set Vx = Vx SHR 1. If the least-significant bit of Vx is 1, then VF is set to 1, otherwise 0. Then Vx is
+                        // divided by 2.
+                        self.v[vx as usize] >>= 1;
+                        self.v[0xF] = self.v[vx as usize] & 0x01;
+                    },
+                    0x8007 => {
+                        // Vx = Vy - Vx
+                        // Sets VX to VY minus VX. VF is set to 0 when there's an underflow, and 1 when there is not. (i.e. VF set to 1 if VY >= VX)
+                        self.v[vx as usize] = self.v[vy as usize].wrapping_sub(self.v[vx as usize]);
+                        self.v[0xF] = (self.v[vx as usize] < self.v[vy as usize]) as u8;
+                    },
+                    0x800E => {
+                        // Set Vx = Vx SHL 1. If the most-significant bit of Vx is 1, then VF is set to 1, otherwise to 0. Then Vx is
+                        // multiplied by 2
+                        self.v[vx as usize] <<= 1;
+                        self.v[0xF] = self.v[vx as usize] & 0x80;
+                    },
                     _ => eprintln!("Unknown opcode:{:#06x}", self.opcode),
                 };
             },
