@@ -16,7 +16,8 @@ fn main() -> Result<(), String> {
 
 
     // let c8_rom = PathBuf::from("res/chip8-roms/games/Pong (1 player).ch8");
-    let c8_rom = PathBuf::from("res/chip8-roms/tests/1-chip8-logo.ch8");
+    //let c8_rom = PathBuf::from("res/chip8-roms/tests/1-chip8-logo.ch8");
+    let c8_rom = PathBuf::from("res/chip8-roms/games/Airplane.ch8");
     let mut file = File::open(c8_rom);
     let mut buffer = Vec::new();
     file.expect("could not open file").read_to_end(&mut buffer).expect("could not read to end");
@@ -46,11 +47,7 @@ fn main() -> Result<(), String> {
     //         chip_8.emulate_cycle();
     //         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 30));
     // }
-        
-        // The rest of the game loop goes here...
 
-  // Emulate one cycle
-//   myChip8.emulateCycle();
 
 //   // If the draw flag is set, update the screen
 //   if(myChip8.drawFlag)
@@ -60,18 +57,10 @@ fn main() -> Result<(), String> {
 //   myChip8.setKeys();	
     loop {
         cpt += 1 ;
-        
-        if cpt == 40 { // test rom is 39 opcodes long
-            break;
-        }
+        chip_8.emulate_cycle();
     }
 
     Ok(())
-    // Set up render system and register input callbacks
-    //   setupGraphics();
-    //   setupInput();
-
-    // Initialize the Chip8 system and load the game into the memory
     //   myChip8.initialize();
     //   myChip8.loadGame("pong");
 

@@ -24,35 +24,50 @@ static CHIP8_FONTSET: [u8; 80] = [
     0xF0, 0x80, 0xF0, 0x80, 0x80, // F
 ];
 
-#[derive(Default, Debug)]
+#[derive(Debug)]
 pub struct Chip8 {
-    pub memory: Vec<u8>,
+    pub memory: [u8;4096],
     pub opcode: u16,
     pub i: u16,          // index register
-    pub v: Vec<u8>,      // CPU registers from V0 to VE
+    pub v: [u8;16],      // CPU registers from V0 to VE
     pub pc: u16,         // program counter
-    pub gfx: Vec<bool>,  // the screen : 64*32 pixels
+    pub gfx: [bool; 2048],  // the screen : 64*32 pixels
     pub delay_timer: u8, // timer registers that count down at 60Hz
     pub sound_timer: u8,
-    pub stack: Vec<u8>,
+    pub stack: [u8;16],
     pub sp: u8,
-    pub key: Vec<u8>, // possible keys of the CHIP-8
+    pub key: [u8;16], // possible keys of the CHIP-8
 }
 
 
 impl Chip8 {
+    pub fn default() -> Self{
+        Self {
+            memory: [0;4096],
+            opcode: 0,
+            i: 0,
+            v: [0;16],
+            pc: 0,
+            gfx: [false;2048],
+            delay_timer: 0,
+            sound_timer: 0,
+            stack: [0;16],
+            sp: 0,
+            key: [0;16],
+        }
+    }
     pub fn initialize(&mut self) {
         self.pc = 0x200; // Program counter starts at 0x200
         self.opcode = 0; // Reset current opcode
         self.i = 0; // Reset index register
         self.sp = 0; // Reset stack pointer
-        self.memory = vec![0; 4096]; // clear Memory
-        self.v = vec![0;16]; // CPU registers from V0 to VE
+        self.memory = [0; 4096]; // clear Memory
+        self.v = [0;16]; // CPU registers from V0 to VE
         self.delay_timer = 0; // timer registers that count down at 60Hz
         self.sound_timer = 0;
-        self.stack = vec![0; 16]; // Clear stack
-        self.key = vec![0; 16]; // possible keys of the CHIP-8
-        self.gfx = vec![false; 2048]; // the screen : 64*32 pixels    
+        self.stack = [0; 16]; // Clear stack
+        self.key = [0; 16]; // possible keys of the CHIP-8
+        self.gfx = [false; 2048]; // the screen : 64*32 pixels
 
         // Load fontset
         for n in 0..79 {
@@ -111,22 +126,28 @@ impl Chip8 {
             0x0000 => { 
                 match self.opcode & 0x00FF {
                     0x00E0 => { // Clear the screen
-                        self.gfx = vec![false; 2048]; 
+                        self.gfx = [false; 2048];
                      },
                     0x00EE => { // Returns from a subroutine
-                        println!("TODO: 0x00EE");
+                        let low  = self.stack[self.sp as usize];
+                        self.sp -=1;
+                        let high  = self.stack[self.sp as usize];
+                        self.pc = (high as u16)  << 8 | low as u16;
                     },
-                    _ => {println!("Not yet implemented: call to routine at NNN");}
+                    _ => {println!("Not implemented");}
                 }
             },
             0x1000 => {
                 // Jumps to address NNN.
+                self.pc = self.opcode & 0x0FFF;
             },
             0x2000 => {
                 // Calls subroutine at NNN.
                 // context save
-                self.stack[self.sp as usize] = self.pc as u8;
+                let [hi, lo] = shift_idiomatic_split_u16(self.pc);
+                self.stack[self.sp as usize] = hi;
                 self.sp += 1;
+                self.stack[self.sp as usize] = lo;
                 self.pc = self.opcode & 0x0FFF;
             },
             0x3000 => {
